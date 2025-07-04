@@ -38,24 +38,35 @@ function EmailVerify() {
   };
 
   const onSubmitHandler = async (e) => {
-    e.preventDefault();
-    const otpArray = inputRefs.current.map((input) => input.value);
-    const otp = otpArray.join("");
+  e.preventDefault();
+  const otpArray = inputRefs.current.map((input) => input.value);
+  const otp = otpArray.join("");
 
-    try {
-      const { data } = await axios.post(backendUrl + "/api/auth/verifyAccount", { otp });
+  try {
+    const token = localStorage.getItem("token"); // ✅ Get token from localStorage
 
-      if (data.success) {
-        toast.success(data.message);
-        await getUserData();
-        navigate("/");
-      } else {
-        toast.error(data.message);
+    const { data } = await axios.post(
+      backendUrl + "/api/auth/verifyAccount",
+      { otp },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ Send token
+        },
+        withCredentials: true,
       }
-    } catch (error) {
-      toast.error("Something went wrong");
+    );
+
+    if (data.success) {
+      toast.success(data.message);
+      await getUserData(); // refresh user state
+      navigate("/");
+    } else {
+      toast.error(data.message);
     }
-  };
+  } catch (error) {
+    toast.error(error.response?.data?.message || "Something went wrong");
+  }
+};
 
   // ✅ Only redirect if not logged in or already verified
   useEffect(() => {
