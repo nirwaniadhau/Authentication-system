@@ -40,7 +40,7 @@ export const registerUser = async (req, res) => {
       expiresIn: "7d",
     });
 
-    // Set cookie
+    // Set cookie (optional)
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -50,19 +50,19 @@ export const registerUser = async (req, res) => {
 
     res.cookie("token", token, cookieOptions);
 
-    // ✉️ Send welcome email — but don't let it block registration
+    // Send welcome email (optional, non-blocking)
     const mailOptions = {
       from: process.env.SENDER_EMAIL,
       to: email,
       subject: "Welcome to Our Company 🎉",
       text: `Hi ${name},\n\nWelcome to our company! We're glad to have you onboard.\n\nBest regards,\nTeam`,
       html: `
-          <h2>Welcome, ${name}!</h2>
-          <p>Thanks for signing up with us. We’re excited to have you on board!</p>
-          <p>Feel free to reply to this email if you have any questions.</p>
-          <br>
-          <p>— The Team</p>
-        `,
+        <h2>Welcome, ${name}!</h2>
+        <p>Thanks for signing up with us. We’re excited to have you on board!</p>
+        <p>Feel free to reply to this email if you have any questions.</p>
+        <br>
+        <p>— The Team</p>
+      `,
     };
 
     try {
@@ -70,13 +70,15 @@ export const registerUser = async (req, res) => {
       console.log("✅ Email sent successfully");
     } catch (emailError) {
       console.error("❌ Email failed:", emailError.message);
-      // Still allow the registration to succeed
     }
 
+    // ✅ Return token in response body
     return res.status(201).json({
       message: "Registered successfully",
       success: true,
+      token, // 🔑 Add this
     });
+
   } catch (error) {
     console.error("❌ Registration Error:", error.message);
     return res.status(500).json({
@@ -105,8 +107,7 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password); // ✅ Fixed
-
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
         message: "Invalid password",
@@ -115,7 +116,6 @@ export const loginUser = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-      // ✅ Fixed
       expiresIn: "7d",
     });
 
@@ -131,6 +131,7 @@ export const loginUser = async (req, res) => {
     return res.json({
       message: "Logged in successfully",
       success: true,
+      token, // ✅ Fix: Include token here
       user: {
         id: user._id,
         name: user.name,
@@ -139,9 +140,12 @@ export const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Login Error:", error);
-    return res.status(500).json({ message: "Failed to login", success: false });
+    return res
+      .status(500)
+      .json({ message: "Failed to login", success: false });
   }
 };
+
 
 export const logout = async (req, res) => {
   try {
