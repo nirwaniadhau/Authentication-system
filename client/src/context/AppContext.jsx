@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect } from "react";
-import axios from 'axios';
-import { toast } from 'react-toastify';
+import axios from "axios";
+import { toast } from "react-toastify";
 
 export const AppContext = createContext();
 
@@ -12,35 +12,68 @@ export const AppContextProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState(null);
 
+  // ✅ Get Auth State on Initial Load
   const getAuthState = async () => {
     try {
-      const { data } = await axios.get(backendUrl + '/api/auth/isAuth', {
-  withCredentials: true
-});
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setIsLoggedIn(false);
+        setUserData(null);
+        return;
+      }
+
+      const { data } = await axios.get(backendUrl + "/api/auth/isAuth", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
 
       if (data.success) {
         setIsLoggedIn(true);
-        getUserData();
+        await getUserData(); // fetch user data after auth confirmed
       } else {
         setIsLoggedIn(false);
+        setUserData(null);
       }
     } catch (error) {
       if (error.response?.status === 401) {
-        setIsLoggedIn(false); // not authenticated
+        setIsLoggedIn(false);
+        setUserData(null);
       } else {
         toast.error(error.response?.data?.message || error.message);
       }
     }
   };
 
+  // ✅ Securely Fetch User Data
   const getUserData = async () => {
     try {
-      const { data } = await axios.get(backendUrl + '/api/auth/data');
-      data.success
-        ? setUserData(data.userData)
-        : toast.error(data.message || "Failed to fetch user data");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setIsLoggedIn(false);
+        setUserData(null);
+        return;
+      }
+
+      const { data } = await axios.get(backendUrl + "/api/auth/data", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+
+      if (data.success) {
+        setUserData(data.userData);
+      } else {
+        toast.error(data.message || "Failed to fetch user data");
+      }
     } catch (err) {
       console.error("Error fetching user data:", err);
+      if (err.response?.status === 401) {
+        setIsLoggedIn(false);
+        setUserData(null);
+      }
     }
   };
 
@@ -57,9 +90,5 @@ export const AppContextProvider = ({ children }) => {
     getUserData,
   };
 
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
