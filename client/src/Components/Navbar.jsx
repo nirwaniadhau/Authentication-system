@@ -12,26 +12,33 @@ const Navbar = () => {
 
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const sendVerificationOTP = async () => {
-    try {
-      axios.defaults.withCredentials = true;
-      const { data } = await axios.post(backendUrl + "/api/auth/send-verify-otp");
-
-      if (data.success) {
-        toast.success(data.message);
-
-        // ✅ Update user data before navigating
-        await getUserData();
-
-        // ✅ Navigate after updating context
-        navigate("/email-verify");
-      } else {
-        toast.error(data.message || "Failed to send verification email");
+ const sendVerificationOTP = async () => {
+  try {
+    const token = localStorage.getItem("token"); // ✅ Get token from localStorage
+    const { data } = await axios.post(
+      backendUrl + "/api/auth/send-verify-otp",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ Pass token here
+        },
+        withCredentials: true,
       }
-    } catch (error) {
-      toast.error(error.message || "Something went wrong");
+    );
+
+    if (data.success) {
+      toast.success(data.message);
+
+      await getUserData(); // Update userData in context
+      navigate("/email-verify");
+    } else {
+      toast.error(data.message || "Failed to send verification email");
     }
-  };
+  } catch (error) {
+    toast.error(error.response?.data?.message || error.message || "Something went wrong");
+  }
+};
+
 
   const logout = async () => {
     try {
