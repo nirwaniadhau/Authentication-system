@@ -12,10 +12,11 @@ const app= express();
 const port = Number(process.env.PORT) || 4000;
 
 connectDB();
-
 const allowedOrigins = [
   "http://localhost:5173",
-]
+  "https://authentication-system-frontend-yw7l.onrender.com"  // ✅ Add this
+];
+
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
