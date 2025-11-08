@@ -1,16 +1,41 @@
-import mongoose from "mongoose";
+import { DataTypes } from "sequelize";
+import { sequelize } from "../config/db.js";
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  verificationToken: { type: String, default: "" },
-  verificationTokenExpiry: { type: Number, default: 0 },
-  isVerified: { type: Boolean, default: false },
-  resetOtp: { type: String, default: "" },
-  resetOtpExpiry: { type: Number, default: 0 },
+
+const User = sequelize.define("User", {
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  verificationToken: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+  },
+  verificationTokenExpiry: {
+    type: DataTypes.BIGINT, // stores timestamps like 1712345678
+    defaultValue: 0,
+  },
+  isVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  resetOtp: {
+    type: DataTypes.STRING,
+    defaultValue: "",
+  },
+  resetOtpExpiry: {
+    type: DataTypes.BIGINT,
+    defaultValue: 0,
+  },
 });
-
-const User=mongoose.model.user || mongoose.model('user',userSchema);
 
 export default User;

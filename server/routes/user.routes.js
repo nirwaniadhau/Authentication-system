@@ -1,18 +1,25 @@
-import express from "express"
-import { registerUser,loginUser, logout, sendVerificationOTP, verifyUser, isAuthenticated, sendResetOTP, resetPassword } from "../Controller/user.controller.js";
+import express from "express";
+import {
+  registerUser,
+  loginUser,
+  logout,
+  isAuthenticated,
+  getUserProfile,
+} from "../Controller/user.controller.js"; // ✅ Only import what exists
+
 import { getUserDetails } from "../Controller/userDetails.js";
 import { userAuth } from "../middleware/user.middleware.js";
-const userRoute= express.Router();
 
-userRoute.post("/register",registerUser);
-userRoute.post("/loginUser",loginUser);
-userRoute.post("/logout",logout);
-userRoute.post("/send-verify-otp",userAuth,sendVerificationOTP);
-userRoute.post("/verifyAccount",userAuth,verifyUser);
-userRoute.get("/isAuth",userAuth,isAuthenticated);
-userRoute.post("/sendResetOtp",sendResetOTP);
-userRoute.post("/resetPass",resetPassword);
-userRoute.get("/data",userAuth,getUserDetails)
+const userRoute = express.Router();
 
+// 🔹 Public routes
+userRoute.post("/register", registerUser);
+userRoute.post("/loginUser", loginUser);
+
+// 🔹 Protected routes (require JWT)
+userRoute.post("/logout", userAuth, logout);
+userRoute.get("/isAuth", userAuth, isAuthenticated);
+userRoute.get("/data", userAuth, getUserDetails);
+userRoute.get("/profile/:id", userAuth, getUserProfile);
 
 export default userRoute;
